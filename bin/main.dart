@@ -6,9 +6,87 @@ import 'package:ddrive/ddrive.dart' as ddrive;
 import 'package:unscripted/unscripted.dart';
 import 'package:prompt/prompt.dart';
 
-main(arguments) {
-  arguments = ['init'];//, '--help'];
-  declare(Ddrive).execute(arguments);
+import "package:http/http.dart" as http;
+import 'package:googleapis_auth/auth_io.dart' as auth;
+import 'package:googleapis/drive/v2.dart' as drive;
+import 'dart:convert';
+import 'dart:io';
+
+class Credentials {
+  String clientId;
+  String secret;
+  auth.AccessToken accessToken;
+  String refreshToken;
+  List<String> scopes;
+  Credentials(this.clientId, this.secret, this.accessToken, this.refreshToken, this.scopes);
+  Credentials.fromJson(json){
+    if (json is String) {
+      json = JSON.decode(json);
+    }
+    if (json is! Map) {
+      throw new ArgumentError('json must be a Map or a String encoding a Map.');
+    }
+
+    clientId = json['clientId'];
+    secret = json['secret'];
+    var accessTokenJson = json['accessToken'];
+    accessToken = new auth.AccessToken(accessTokenJson['type'], accessTokenJson['data'], new DateTime.fromMillisecondsSinceEpoch(accessTokenJson['expiry'], isUtc: true));
+    refreshToken = json['refreshToken'];
+    scopes = json['scopes'];
+  }
+
+  static toJson(Credentials c) {
+    var accessTokenJson = {"type" : c.accessToken.type, "data" : c.accessToken.data, "expiry" : c.accessToken.expiry.toUtc().millisecondsSinceEpoch};//JSON.encode(c.accessToken);
+    return JSON.encode({"clientId": "${c.clientId}", "secret": "${c.secret}", "accessToken": accessTokenJson, "refreshToken" : c.refreshToken, "scopes": c.scopes});
+  }
+}
+
+main(arguments) async {
+  final clientId = '354790962074-7rrlnuanmamgg1i4feed12dpuq871bvd.apps.googleusercontent.com';
+  final secret = 'RHjKdah8RrHFwu6fcc0uEVCw';
+  final id = new auth.ClientId( clientId, secret);
+
+  final scopes = [drive.DriveApi.DriveScope];
+
+  final accesType = 'offline';
+
+  Credentials credentials;
+  http.Client c = new http.Client();
+
+  void prompt(String url) {
+    print("Please go to the following URL and grant access:");
+    print("  => $url");
+    print("");
+  }
+
+  File f = new File('credentials.json');
+  if(await f.exists()) {
+    credentials =  new Credentials.fromJson(await f.readAsString());
+  }
+
+  if(credentials != null) {
+    var accessCredentials =new auth.AccessCredentials(credentials.accessToken, credentials.refreshToken, credentials.scopes);
+    auth.refreshCredentials(id, accessCredentials, c);
+    c =  auth.authenticatedClient(c, accessCredentials);
+  }else {
+    auth.AccessCredentials accessCredentials = await auth.obtainAccessCredentialsViaUserConsent(id, scopes, c, prompt);
+    c =  auth.authenticatedClient(c, accessCredentials);
+
+    credentials =  new Credentials(clientId, secret, accessCredentials.accessToken, accessCredentials.refreshToken, accessCredentials.scopes);
+
+    f.createSync();
+    f.writeAsStringSync(Credentials.toJson(credentials));
+  }
+
+  var api = new drive.DriveApi(c);
+  drive.FileList fileList = await api.files.list();
+
+  fileList.items.forEach((drive.File f) => print(f.originalFilename));
+
+  c.close();
+
+  //arguments = ['init'];//, '--help'];
+  //declare(Ddrive).execute(arguments);
 }
 
 class Ddrive extends Object with
