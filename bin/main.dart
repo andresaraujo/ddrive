@@ -11,6 +11,9 @@ import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:googleapis/drive/v2.dart' as drive;
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
+
+drive.DriveApi api;
 
 class Credentials {
   String clientId;
@@ -78,19 +81,19 @@ main(arguments) async {
     f.writeAsStringSync(Credentials.toJson(credentials));
   }
 
-  var api = new drive.DriveApi(c);
+  api = new drive.DriveApi(c);
   drive.FileList fileList = await api.files.list();
 
-  fileList.items.forEach((drive.File f) => print(f.originalFilename));
+  fileList.items.forEach((drive.File f) => print("${f.id} ${f.originalFilename}"));
 
   c.close();
 
-  //arguments = ['init'];//, '--help'];
-  //declare(Ddrive).execute(arguments);
+  arguments = ['quota'];//, '--help'];
+  declare(Ddrive).execute(arguments);
 }
 
 class Ddrive extends Object with
-  StatsCommand,
+  QuotaCommand,
   ListCommand,
   InitCommand {
 
@@ -114,9 +117,30 @@ ${url}
   }
 }
 
-class StatsCommand {
-  @SubCommand(help: 'See stats')
-  stats() {}
+class QuotaCommand {
+  @SubCommand(help: 'prints out quota information for this drive')
+  quota() async {
+    drive.About about = await api.about.get();
+    num free = num.parse(about.quotaBytesTotal) - num.parse(about.quotaBytesUsed);
+    print('''
+      Name : ${about.name}
+      Account type : : ${about.quotaType}
+      Bytes used : ${about.quotaBytesUsed} (${prettySize(about.quotaBytesUsed)})
+      Bytes free : ${free} (${prettySize(free)})
+      Bytes InTrash : ${about.quotaBytesUsedInTrash} (${prettySize(about.quotaBytesUsedInTrash)})
+      Total bytes : ${about.quotaBytesTotal} (${prettySize(about.quotaBytesTotal)})
+      ''');
+  }
+}
+
+prettySize(bytes) {
+  if(bytes is String){
+    bytes = num.parse(bytes);
+  }
+  var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  if (bytes == 0) return '0 Bytes';
+  var i = (math.log(bytes) / math.log(1024)).floor();
+  return "${(bytes / math.pow(1024, i)).round()} ${sizes[i]}";
 }
 
 class ListCommand {
