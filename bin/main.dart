@@ -82,9 +82,13 @@ main(arguments) async {
   }
 
   api = new drive.DriveApi(c);
-  drive.FileList fileList = await api.files.list();
+  drive.FileList fileList = await api.files.list(q: "mimeType='application/vnd.google-apps.folder'");
+  //drive.ChildList fileList = await api.children.list(q: "mimeType='application/vnd.google-apps.folder'");
 
-  fileList.items.forEach((drive.File f) => print("${f.id} ${f.originalFilename}"));
+  fileList.items.forEach((drive.File f) {
+    print("${f.id} /${f.title}");
+
+  });
 
   c.close();
 
@@ -123,7 +127,7 @@ class QuotaCommand {
     drive.About about = await api.about.get();
     num free = num.parse(about.quotaBytesTotal) - num.parse(about.quotaBytesUsed);
     print('''
-      Name : ${about.name}
+      Name : ${about.name} Root Folder Id : ${about.rootFolderId}
       Account type : : ${about.quotaType}
       Bytes used : ${about.quotaBytesUsed} (${prettySize(about.quotaBytesUsed)})
       Bytes free : ${free} (${prettySize(free)})
