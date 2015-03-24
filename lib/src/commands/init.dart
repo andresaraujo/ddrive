@@ -9,7 +9,7 @@ import '../context.dart' as context;
 
 class InitCommand {
 
-  @SubCommand(help: 'Gets the quota information about the current user')
+  @SubCommand(help: 'Initialize a Google Drive home directory')
   init({ @Option(help: 'The root directory for Google Drive. Defaults to your current directory') String driveHome }) async {
     String p = driveHome == null || driveHome.isEmpty ? path.current : driveHome; //path ? path : path.current;
     bool firstTime = ! await context.credentialsExist(p);
