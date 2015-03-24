@@ -1,3 +1,3 @@
 # ddrive
 
-A minimal command-line application.
+A simple Google Drive command line app
