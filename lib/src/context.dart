@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 
 Credentials credentials;
 drive.DriveApi api;
@@ -25,6 +26,30 @@ gdPath(String absPath) {
 credentialsExist(String absPath) async {
   File f = new File( path.join(gdPath(absPath), "credentials.json"));
   return f.exists();
+}
+
+Future<String> discoverGdPath(String currentAbsPath) async {
+  String  p = currentAbsPath;
+  String newPath;
+  bool found = false;
+
+  while(!found){
+    FileStat info = await FileStat.stat( gdPath(p) );
+    if(info.type == FileSystemEntityType.DIRECTORY){
+      found = true;
+      break;
+    }
+
+    newPath = path.normalize(path.join(p, ".."));
+    if(p == newPath) {
+      break;
+    }
+    p = newPath;
+  }
+
+  if(!found) throw new StateError("no gd context is found; use ddrive init");
+
+  return new Future(() => p);
 }
 
 discover(String currentAbsPath) async {

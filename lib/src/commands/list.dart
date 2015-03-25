@@ -10,7 +10,23 @@ import '../context.dart' as context;
 class ListCommand {
 
   @SubCommand(help: 'List files')
-  list() async {
+  list({@Option(help: 'Directory to list. Optional') String dir : ""}) async {
+    String currentPath = path.join(path.current, dir);
+    String gdPath = await context.discoverGdPath(currentPath);
+
+
+
+    String relPath = path.relative(currentPath, from: gdPath);
+
+    print(currentPath);
+    print(gdPath);
+    print(relPath);
+
+    await context.discover(path.current);
+    drive.DriveApi api = context.api;
+    drive.FileList list = await api.files.list(q : "'$relPath' in parents and trashed=false"); //$folderID' in parents
+
+    list.items.forEach((f) => print(f.title));
   }
 }
 
