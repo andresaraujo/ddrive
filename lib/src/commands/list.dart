@@ -4,13 +4,11 @@ import 'package:unscripted/unscripted.dart';
 import 'package:googleapis/drive/v2.dart' as drive;
 import 'package:path/path.dart' as path;
 
-import '../util.dart';
 import '../context.dart' as context;
 
 class ListCommand {
-
   @SubCommand(help: 'List files')
-  list({@Option(help: 'Directory to list. Optional') String dir : ""}) async {
+  list({@Option(help: 'Directory to list. Optional') String dir: ""}) async {
     String currentPath = path.join(path.current, dir);
     String gdPath = await context.discoverGdPath(currentPath);
 
@@ -30,39 +28,43 @@ class ListCommand {
     String parentId = "root";
     drive.FileList results;
 
-    if(relPath.isEmpty){
+    if (relPath.isEmpty) {
       results = await findFilesInPath(api, parentId);
-    }else {
-      for(int i = 0; i < subtree.length; i++) {
+    } else {
+      for (int i = 0; i < subtree.length; i++) {
         String p = subtree[i];
         drive.FileList rootList = await findFoldersInPath(api, parentId, p);
-        if(!rootList.items.isEmpty) {
+        if (!rootList.items.isEmpty) {
           parentId = rootList.items[0].id;
 
-          if(i == subtree.length -1){
+          if (i == subtree.length - 1) {
             results = await findFilesInPath(api, parentId);
           }
-        }else {
+        } else {
           print("Folder [${relPath}] doesn't exist");
           break;
         }
       }
     }
 
-    if(results == null) {
+    if (results == null) {
       print("No files found in ${relPath}");
     } else {
       results.items
-      .map((f) => f.mimeType == "application/vnd.google-apps.folder" ? "/" + f.title : f.title )
-      .forEach( (f) => print(f));
+          .map((f) => f.mimeType == "application/vnd.google-apps.folder"
+              ? "/" + f.title
+              : f.title)
+          .forEach((f) => print(f));
     }
   }
 
-  findFoldersInPath(drive.DriveApi api, String folderId, String folderName) async {
-    return api.files.list(q : "'$folderId' in parents and title = '$folderName' and trashed=false and mimeType = 'application/vnd.google-apps.folder'"); //$folderID' in parents
+  findFoldersInPath(
+      drive.DriveApi api, String folderId, String folderName) async {
+    return api.files.list(
+        q: "'$folderId' in parents and title = '$folderName' and trashed=false and mimeType = 'application/vnd.google-apps.folder'");
   }
 
   findFilesInPath(drive.DriveApi api, String folderId) async {
-    return api.files.list(q : "'$folderId' in parents and trashed=false"); //$folderID' in parents
+    return api.files.list(q: "'$folderId' in parents and trashed=false");
   }
 }

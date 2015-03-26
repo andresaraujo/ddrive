@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 prettySize(bytes) {
-  if(bytes is String){
+  if (bytes is String) {
     bytes = num.parse(bytes);
   }
   var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];

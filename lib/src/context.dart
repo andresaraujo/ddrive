@@ -13,7 +13,8 @@ Credentials credentials;
 drive.DriveApi api;
 
 class Defaults {
-  static const ClientId = '354790962074-7rrlnuanmamgg1i4feed12dpuq871bvd.apps.googleusercontent.com';
+  static const ClientId =
+      '354790962074-7rrlnuanmamgg1i4feed12dpuq871bvd.apps.googleusercontent.com';
   static const Secret = 'RHjKdah8RrHFwu6fcc0uEVCw';
   static const Scopes = const [drive.DriveApi.DriveScope];
   static const AccessType = 'offline';
@@ -24,30 +25,30 @@ gdPath(String absPath) {
 }
 
 credentialsExist(String absPath) async {
-  File f = new File( path.join(gdPath(absPath), "credentials.json"));
+  File f = new File(path.join(gdPath(absPath), "credentials.json"));
   return f.exists();
 }
 
 Future<String> discoverGdPath(String currentAbsPath) async {
-  String  p = currentAbsPath;
+  String p = currentAbsPath;
   String newPath;
   bool found = false;
 
-  while(!found){
-    FileStat info = await FileStat.stat( gdPath(p) );
-    if(info.type == FileSystemEntityType.DIRECTORY){
+  while (!found) {
+    FileStat info = await FileStat.stat(gdPath(p));
+    if (info.type == FileSystemEntityType.DIRECTORY) {
       found = true;
       break;
     }
 
     newPath = path.normalize(path.join(p, ".."));
-    if(p == newPath) {
+    if (p == newPath) {
       break;
     }
     p = newPath;
   }
 
-  if(!found) throw new StateError("no gd context is found; use ddrive init");
+  if (!found) throw new StateError("no gd context is found; use ddrive init");
 
   return new Future(() => p);
 }
@@ -57,21 +58,21 @@ discover(String currentAbsPath) async {
   var newPath;
   bool found = false;
 
-  while(!found){
-    FileStat info = await FileStat.stat( gdPath(p) );
-    if(info.type == FileSystemEntityType.DIRECTORY){
+  while (!found) {
+    FileStat info = await FileStat.stat(gdPath(p));
+    if (info.type == FileSystemEntityType.DIRECTORY) {
       found = true;
       break;
     }
 
     newPath = path.normalize(path.join(p, ".."));
-    if(p == newPath) {
+    if (p == newPath) {
       break;
     }
     p = newPath;
   }
 
-  if(!found) throw new StateError("no gd context is found; use ddrive init");
+  if (!found) throw new StateError("no gd context is found; use ddrive init");
 
   await loadCredentialsFromFile(p);
 }
@@ -81,18 +82,20 @@ loadCredentialsFromFile(String absPath) async {
   http.Client c = new http.Client();
 
   File f = new File(path.join(gdPath(absPath), "credentials.json"));
-  if(await f.exists()) {
-    credentials =  new Credentials.fromJson(await f.readAsString());
+  if (await f.exists()) {
+    credentials = new Credentials.fromJson(await f.readAsString());
 
-    auth.AccessCredentials accessCredentials = new auth.AccessCredentials(credentials.accessToken, credentials.refreshToken, credentials.scopes);
+    auth.AccessCredentials accessCredentials = new auth.AccessCredentials(
+        credentials.accessToken, credentials.refreshToken, credentials.scopes);
     accessCredentials = await auth.refreshCredentials(
-        new auth.ClientId( Defaults.ClientId, Defaults.Secret), accessCredentials, c);
+        new auth.ClientId(Defaults.ClientId, Defaults.Secret),
+        accessCredentials, c);
 
-    c =  auth.authenticatedClient(c, accessCredentials);
+    c = auth.authenticatedClient(c, accessCredentials);
     api = new drive.DriveApi(c);
 
     c.close();
-  }else {
+  } else {
     throw new StateError("no gd context is found; use ddrive init");
   }
 }
@@ -100,20 +103,21 @@ loadCredentialsFromFile(String absPath) async {
 initialize(String absPath) async {
   File f = new File(path.join(gdPath(absPath), "credentials.json"));
 
-  if(!await FileSystemEntity.isDirectory(absPath)) throw new ArgumentError("$absPath is not a directory");
+  if (!await FileSystemEntity.isDirectory(absPath)) throw new ArgumentError(
+      "$absPath is not a directory");
 
-  if(!await f.exists()) {
+  if (!await f.exists()) {
     f.createSync(recursive: true);
   }
 }
 
 ////////////////
 askForAuthorization(String absPath) async {
-  File f = new File( path.join( gdPath(absPath), 'credentials.json') );
+  File f = new File(path.join(gdPath(absPath), 'credentials.json'));
   http.Client c = new http.Client();
-  if(await f.exists()) {
-    credentials =  new Credentials.fromJson(await f.readAsString());
-  }else {
+  if (await f.exists()) {
+    credentials = new Credentials.fromJson(await f.readAsString());
+  } else {
     f.createSync();
   }
 
@@ -123,11 +127,15 @@ askForAuthorization(String absPath) async {
     ''');
   }
 
-  auth.AccessCredentials accessCredentials = await auth.obtainAccessCredentialsViaUserConsent(
-      new auth.ClientId( Defaults.ClientId, Defaults.Secret), Defaults.Scopes, c, prompt);
-  c =  auth.authenticatedClient(c, accessCredentials);
+  auth.AccessCredentials accessCredentials = await auth
+      .obtainAccessCredentialsViaUserConsent(
+          new auth.ClientId(Defaults.ClientId, Defaults.Secret),
+          Defaults.Scopes, c, prompt);
+  c = auth.authenticatedClient(c, accessCredentials);
 
-  credentials =  new Credentials(Defaults.ClientId, Defaults.Secret, accessCredentials.accessToken, accessCredentials.refreshToken, accessCredentials.scopes);
+  credentials = new Credentials(Defaults.ClientId, Defaults.Secret,
+      accessCredentials.accessToken, accessCredentials.refreshToken,
+      accessCredentials.scopes);
   f.writeAsStringSync(Credentials.toJson(credentials));
 
   c.close();
@@ -139,8 +147,9 @@ class Credentials {
   auth.AccessToken accessToken;
   String refreshToken;
   List<String> scopes;
-  Credentials(this.clientId, this.secret, this.accessToken, this.refreshToken, this.scopes);
-  Credentials.fromJson(json){
+  Credentials(this.clientId, this.secret, this.accessToken, this.refreshToken,
+      this.scopes);
+  Credentials.fromJson(json) {
     if (json is String) {
       json = JSON.decode(json);
     }
@@ -151,14 +160,25 @@ class Credentials {
     clientId = json['clientId'];
     secret = json['secret'];
     var accessTokenJson = json['accessToken'];
-    accessToken = new auth.AccessToken(accessTokenJson['type'], accessTokenJson['data'], new DateTime.fromMillisecondsSinceEpoch(accessTokenJson['expiry'], isUtc: true));
+    accessToken = new auth.AccessToken(accessTokenJson['type'],
+        accessTokenJson['data'], new DateTime.fromMillisecondsSinceEpoch(
+            accessTokenJson['expiry'], isUtc: true));
     refreshToken = json['refreshToken'];
     scopes = json['scopes'];
   }
 
   static toJson(Credentials c) {
-    var accessTokenJson = {"type" : c.accessToken.type, "data" : c.accessToken.data, "expiry" : c.accessToken.expiry.toUtc().millisecondsSinceEpoch};
-    return JSON.encode({"clientId": "${c.clientId}", "secret": "${c.secret}", "accessToken": accessTokenJson, "refreshToken" : c.refreshToken, "scopes": c.scopes});
+    var accessTokenJson = {
+      "type": c.accessToken.type,
+      "data": c.accessToken.data,
+      "expiry": c.accessToken.expiry.toUtc().millisecondsSinceEpoch
+    };
+    return JSON.encode({
+      "clientId": "${c.clientId}",
+      "secret": "${c.secret}",
+      "accessToken": accessTokenJson,
+      "refreshToken": c.refreshToken,
+      "scopes": c.scopes
+    });
   }
 }
-

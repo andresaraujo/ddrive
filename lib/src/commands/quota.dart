@@ -8,15 +8,14 @@ import '../util.dart';
 import '../context.dart' as context;
 
 class QuotaCommand {
-
   @SubCommand(help: 'Gets the quota information about the current user')
   quota() async {
-
     await context.discover(path.current);
     drive.DriveApi api = context.api;
 
     drive.About about = await api.about.get();
-    num free = num.parse(about.quotaBytesTotal) - num.parse(about.quotaBytesUsed);
+    num free =
+        num.parse(about.quotaBytesTotal) - num.parse(about.quotaBytesUsed);
     print('''
       Name : ${about.name}
       Root Folder Id : ${about.rootFolderId}
