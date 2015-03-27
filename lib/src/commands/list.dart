@@ -15,10 +15,6 @@ class ListCommand {
     String relPath = path.relative(currentPath, from: gdPath);
     relPath = relPath == "." ? "" : relPath;
 
-    print(currentPath);
-    print(gdPath);
-    print(relPath);
-
     List<String> subtree = relPath.split("/");
 
     //Connect and get the drive API
@@ -50,11 +46,13 @@ class ListCommand {
     if (results == null) {
       print("No files found in ${relPath}");
     } else {
-      results.items
+      List<String> r = results.items
           .map((f) => f.mimeType == "application/vnd.google-apps.folder"
               ? "/" + f.title
               : f.title)
-          .forEach((f) => print(f));
+          .toList();
+      r.sort((a, b) => a.compareTo(b));
+      r.forEach((f) => print(f));
     }
   }
 
