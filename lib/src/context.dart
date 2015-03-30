@@ -9,6 +9,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 
+// Must be updated with the pubspec version.
+const String APP_VERSION = '0.0.1';
+
 Credentials credentials;
 drive.DriveApi api;
 
@@ -111,7 +114,7 @@ initialize(String absPath) async {
   }
 }
 
-////////////////
+
 askForAuthorization(String absPath) async {
   File f = new File(path.join(gdPath(absPath), 'credentials.json'));
   http.Client c = new http.Client();
@@ -139,6 +142,12 @@ askForAuthorization(String absPath) async {
   f.writeAsStringSync(Credentials.toJson(credentials));
 
   c.close();
+}
+
+printVersionInfo() {
+  print('''
+=== Ddrive ${APP_VERSION} ===
+   ''');
 }
 
 class Credentials {

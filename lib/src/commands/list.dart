@@ -3,12 +3,16 @@ library ddrive.src.commands.list;
 import 'package:unscripted/unscripted.dart';
 import 'package:googleapis/drive/v2.dart' as drive;
 import 'package:path/path.dart' as path;
+import 'package:ansicolor/ansicolor.dart';
 
 import '../context.dart' as context;
 
 class ListCommand {
   @SubCommand(help: 'List files')
   list({@Option(help: 'Directory to list. Optional') String dir: ""}) async {
+    context.printVersionInfo();
+    AnsiPen pen = new AnsiPen();
+
     String currentPath = path.join(path.current, dir);
     String gdPath = await context.discoverGdPath(currentPath);
 
@@ -52,7 +56,15 @@ class ListCommand {
               : f.title)
           .toList();
       r.sort((a, b) => a.compareTo(b));
-      r.forEach((f) => print(f));
+      r.forEach((f) {
+        if(f.startsWith("/")){
+          pen.xterm(006);
+          print( pen(f));
+        }else{
+          pen.xterm(245);
+          print( pen(f));
+        }
+      });
     }
   }
 
