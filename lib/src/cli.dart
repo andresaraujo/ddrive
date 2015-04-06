@@ -1,5 +1,4 @@
 import 'package:unscripted/unscripted.dart';
-import 'package:googleapis/drive/v2.dart' as drive;
 
 import 'commands/list.dart';
 import 'commands/quota.dart';
