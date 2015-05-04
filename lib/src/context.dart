@@ -103,6 +103,9 @@ loadCredentialsFromFile(String absPath) async {
   }
 }
 
+/**
+ * Initialize specified folder as a drive directory
+ */
 initialize(String absPath) async {
   File f = new File(path.join(gdPath(absPath), "credentials.json"));
 
@@ -114,14 +117,16 @@ initialize(String absPath) async {
   }
 }
 
-
+/**
+ * Ask for Google Drive authorization ans creates .gd path and credentials.json if don't exist
+ */
 askForAuthorization(String absPath) async {
   File f = new File(path.join(gdPath(absPath), 'credentials.json'));
   http.Client c = new http.Client();
   if (await f.exists()) {
     credentials = new Credentials.fromJson(await f.readAsString());
   } else {
-    f.createSync();
+    f.createSync(recursive: true);
   }
 
   void prompt(String url) {
